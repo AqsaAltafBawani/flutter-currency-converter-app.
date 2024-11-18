@@ -1,0 +1,172 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Currency Converter',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromARGB(255, 108, 238, 216)),
+        useMaterial3: false,
+      ),
+      home: CurrencyConverter(), // Home screen widget
+    );
+  }
+}
+
+// Currency Converter widget
+class CurrencyConverter extends StatefulWidget {
+  @override
+  ConverterState createState() => ConverterState();
+}
+
+class ConverterState extends State<CurrencyConverter> {
+  // Controller for the input TextField
+  final TextEditingController _amountController = TextEditingController();
+
+  // List of available currencies
+  final List<Map<String, dynamic>> _currencies = [
+    {'symbol': '\$', 'code': 'USD', 'rate': 0.0035},
+    {'symbol': '£', 'code': 'GBP', 'rate': 0.0028},
+    {'symbol': '€', 'code': 'EUR', 'rate': 0.0032},
+    {'symbol': '﷼', 'code': 'SAR', 'rate': 0.0131},
+    {'symbol': '₺', 'code': 'TRY', 'rate': 0.094},
+  ];
+
+  String? _selectedCurrency = 'USD'; // Default selected currency
+  double _convertedAmount = 0.0; // Converted amount result
+
+  // Function to handle the conversion
+  void _convertCurrency() {
+    final inputText = _amountController.text;
+
+    // Validate input
+    if (inputText.isEmpty || double.tryParse(inputText) == null) {
+      _showAlertDialog('Invalid Input', 'Please enter a valid numeric amount.');
+      return;
+    }
+
+    final inputAmount = double.parse(inputText);
+
+    // Find the conversion rate for the selected currency
+    final conversionRate = _currencies.firstWhere(
+        (currency) => currency['code'] == _selectedCurrency)['rate'];
+
+    // Calculate the converted amount
+    setState(() {
+      _convertedAmount = inputAmount * conversionRate;
+    });
+  }
+
+  // Function to show an alert dialog
+  void _showAlertDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Function to clear the input field and result
+  void _clearInput() {
+    setState(() {
+      _amountController.clear();
+      _convertedAmount = 0.0;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Currency Converter'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Input field for PKR amount
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'Enter amount in PKR',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 50),
+
+            // Dropdown for selecting a currency
+            DropdownButtonFormField<String>(
+              value: _selectedCurrency,
+              items: _currencies.map((currency) {
+                return DropdownMenuItem<String>(
+                  value: currency['code'],
+                  child: Row(
+                    children: [
+                      Text(currency['symbol']),
+                      SizedBox(width: 22),
+                      Text(currency['code']),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedCurrency = value!;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: 'Select Currency',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 50),
+
+            // Convert Button
+            ElevatedButton(
+              onPressed: _convertCurrency,
+              child: Text('Convert'),
+            ),
+            SizedBox(height: 20),
+
+            // Clear Button
+            ElevatedButton(
+              onPressed: _clearInput,
+              child: Text('Clear'),
+            ),
+            SizedBox(height: 20),
+
+            // Display Converted Amount
+            Text(
+              _convertedAmount == 0.0
+                  ? 'Converted Amount: N/A'
+                  : 'Converted Amount: $_selectedCurrency ${_convertedAmount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
